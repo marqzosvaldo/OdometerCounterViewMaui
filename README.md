@@ -4,7 +4,9 @@ An animated odometer-style counter control for .NET MAUI applications. This cont
 
 ## Demo
 
-<img src="ODOMETER.gif" height="400" />
+| Android | iPhone |
+| :---: | :---: |
+| <img src="ODOMETER.gif" height="400" /> | <img src="ODOMETER iPhone.gif" height="400" /> |
 
 ## Features
 
