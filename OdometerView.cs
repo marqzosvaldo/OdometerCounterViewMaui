@@ -1,0 +1,243 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using Microsoft.Maui.Controls;
+
+namespace OdometerCounterViewMaui;
+
+public class OdometerView : HorizontalStackLayout {
+    public static readonly BindableProperty TargetValueProperty =
+        BindableProperty.Create(nameof(TargetValue), typeof(int), typeof(OdometerView), 0, propertyChanged: OnTargetValueChanged);
+
+    public int TargetValue {
+        get => (int)GetValue(TargetValueProperty);
+        set => SetValue(TargetValueProperty, value);
+    }
+
+    public static readonly BindableProperty TextColorProperty =
+        BindableProperty.Create(nameof(TextColor), typeof(Color), typeof(OdometerView), Colors.White);
+
+    public Color TextColor {
+        get => (Color)GetValue(TextColorProperty);
+        set => SetValue(TextColorProperty, value);
+    }
+
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new double HeightRequest
+    {
+        get => base.HeightRequest;
+        private set => base.HeightRequest = value;
+    }
+
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new double MinimumHeightRequest
+    {
+        get => base.MinimumHeightRequest;
+        private set => base.MinimumHeightRequest = value;
+    }
+
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new double MaximumHeightRequest
+    {
+        get => base.MaximumHeightRequest;
+        private set => base.MaximumHeightRequest = value;
+    }
+
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new double WidthRequest
+    {
+        get => base.WidthRequest;
+        private set => base.WidthRequest = value;
+    }
+
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new double MinimumWidthRequest
+    {
+        get => base.MinimumWidthRequest;
+        private set => base.MinimumWidthRequest = value;
+    }
+
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public new double MaximumWidthRequest
+    {
+        get => base.MaximumWidthRequest;
+        private set => base.MaximumWidthRequest = value;
+    }
+
+    // Configuración
+    
+    // FontSize
+    public static readonly BindableProperty FontSizeProperty =
+        BindableProperty.Create(nameof(FontSize), typeof(double), typeof(OdometerView), 50.0, propertyChanged: OnVisualPropertyChanged);
+
+    public double FontSize {
+        get => (double)GetValue(FontSizeProperty);
+        set => SetValue(FontSizeProperty, value);
+    }
+
+    // DurationMs
+    public static readonly BindableProperty DurationMsProperty =
+        BindableProperty.Create(nameof(DurationMs), typeof(uint), typeof(OdometerView), (uint)2000);
+
+    public uint DurationMs {
+        get => (uint)GetValue(DurationMsProperty);
+        set => SetValue(DurationMsProperty, value);
+    }
+
+    // FontFamily
+    public static readonly BindableProperty FontFamilyProperty =
+        BindableProperty.Create(nameof(FontFamily), typeof(string), typeof(OdometerView), "", propertyChanged: OnVisualPropertyChanged);
+
+    public string FontFamily {
+        get => (string)GetValue(FontFamilyProperty);
+        set => SetValue(FontFamilyProperty, value);
+    }
+
+    // VerticalOffset
+    public static readonly BindableProperty VerticalOffsetProperty =
+        BindableProperty.Create(nameof(VerticalOffset), typeof(double), typeof(OdometerView), 0.0, propertyChanged: OnVisualPropertyChanged);
+
+    public double VerticalOffset {
+        get => (double)GetValue(VerticalOffsetProperty);
+        set => SetValue(VerticalOffsetProperty, value);
+    }
+
+    // DebugMode
+    public static readonly BindableProperty DebugModeProperty =
+        BindableProperty.Create(nameof(DebugMode), typeof(bool), typeof(OdometerView), false, propertyChanged: OnVisualPropertyChanged);
+
+    public bool DebugMode {
+        get => (bool)GetValue(DebugModeProperty);
+        set => SetValue(DebugModeProperty, value);
+    }
+
+    private static void OnVisualPropertyChanged(BindableObject bindable, object oldValue, object newValue) {
+        var control = (OdometerView)bindable;
+        // Al cambiar propiedades visuales, recreamos los dígitos para aplicar los cambios en caliente.
+        control.Children.Clear();
+        string valStr = control.TargetValue.ToString();
+        control.UpdateColumns(valStr.Length);
+        control.UpdateDigitPositions(control.TargetValue, isFinished: true);
+    }
+
+    public OdometerView() {
+        Spacing = 0;
+        HorizontalOptions = LayoutOptions.Center;
+        VerticalOptions = LayoutOptions.Center;
+        IsClippedToBounds = true;
+    }
+
+    private static void OnTargetValueChanged(BindableObject bindable, object oldValue, object newValue) {
+        var control = (OdometerView)bindable;
+        control.AnimateCounter(0, (int)newValue);
+    }
+
+    private void AnimateCounter(int start, int end) {
+        this.AbortAnimation("OdometerRun");
+        string endStr = end.ToString();
+        UpdateColumns(endStr.Length);
+
+        var animation = new Animation(v =>
+        {
+            // Durante la animación, usamos isFinished = false para el movimiento suave
+            UpdateDigitPositions(v, isFinished: false);
+        }, start, end);
+
+        animation.Commit(this, "OdometerRun", 16, DurationMs, Easing.CubicOut, (v, c) =>
+        {
+            // AL FINALIZAR: Llamamos con isFinished = true.
+            // Esto fuerza a los números a alinearse perfectamente ignorando decimales.
+            UpdateDigitPositions(end, isFinished: true);
+        });
+    }
+
+    private void UpdateColumns(int count) {
+        double effectiveHeight = FontSize * 1.6;
+        base.HeightRequest = effectiveHeight;
+
+        while (Children.Count < count) {
+            Children.Insert(0, new OdometerDigit(
+                FontSize,
+                TextColor,
+                effectiveHeight,
+                FontFamily,
+                VerticalOffset,
+                DebugMode
+            ));
+        }
+        while (Children.Count > count) {
+            Children.RemoveAt(0);
+        }
+    }
+
+    private void UpdateDigitPositions(double totalValue, bool isFinished) {
+        for (int i = 0; i < Children.Count; i++) {
+            if (Children[i] is OdometerDigit digitControl) {
+                int power = Children.Count - 1 - i;
+                double divisor = Math.Pow(10, power);
+
+                double rawValue = totalValue / divisor;
+                double valForColumn = Math.Round(rawValue, 4);
+
+                double finalPosition;
+
+                double opacity = 1.0;
+
+                if (isFinished) {
+                    // AL FINAL: Alineación perfecta (Snap Duro)
+                    finalPosition = Math.Floor(valForColumn);
+                    if (power == 0) finalPosition = valForColumn;
+                } else {
+                    double floorVal = Math.Floor(valForColumn);
+                    double remainder = valForColumn - floorVal;
+
+                    // UMBRAL:
+                    // 0.30 significa que el número espera quieto el 30% del tiempo.
+                    // En el último 70% gira suavemente.
+                    double threshold = 0.30;
+
+                    finalPosition = floorVal;
+
+                    if (remainder > threshold) {
+                        // 1. Calculamos el progreso lineal del giro (de 0.0 a 1.0)
+                        double linearProgress = (remainder - threshold) / (1.0 - threshold);
+
+                        // 2. APLICAMOS EL GIRO CON REBOTE SUAVE (Custom BackOut)
+                        // Formula: 1 + (t - 1)^3 * (1 + s) + (t - 1)^2 * s
+                        // Donde s es la "fuerza" del rebote. 1.70158 es el standard.
+                        // Usaremos 0.6 para que sea "pequeño".
+                        double s = 0.6;
+                        double t = linearProgress - 1;
+                        double bounceProgress = (t * t * ((s + 1) * t + s) + 1);
+
+                        finalPosition += bounceProgress;
+
+                        // 3. FADE EFFECT (Para columnas > 0)
+                        // Bajamos opacidad durante el giro.
+                        // Sin(linearProgress * PI) va de 0 a 1 y vuelve a 0.
+                        double fadeStrength = 0.6; // Opacidad mínima = 0.4
+                        opacity = 1.0 - (fadeStrength * Math.Sin(linearProgress * Math.PI));
+                    }
+
+                    // La unidad siempre gira libre y lineal
+                    if (power == 0) {
+                        finalPosition = rawValue;
+                        // FADE EFFECT (Para unidad)
+                        // Usamos el remainder directo (0..1) para el ciclo continuo
+                        double fadeStrength = 0.6;
+                        opacity = 1.0 - (fadeStrength * Math.Sin(remainder * Math.PI));
+                    }
+                }
+
+                digitControl.SetPosition(finalPosition);
+                digitControl.Opacity = opacity;
+            }
+        }
+    }
+}
