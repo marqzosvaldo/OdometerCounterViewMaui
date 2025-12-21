@@ -15,7 +15,7 @@ public class OdometerView : HorizontalStackLayout {
     }
 
     public static readonly BindableProperty TextColorProperty =
-        BindableProperty.Create(nameof(TextColor), typeof(Color), typeof(OdometerView), Colors.White);
+        BindableProperty.Create(nameof(TextColor), typeof(Color), typeof(OdometerView), Colors.White, propertyChanged: OnVisualPropertyChanged);
 
     public Color TextColor {
         get => (Color)GetValue(TextColorProperty);
