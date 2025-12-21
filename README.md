@@ -2,6 +2,10 @@
 
 An animated odometer-style counter control for .NET MAUI applications. This control provides smooth scrolling transitions for numbers, perfect for displaying changing values like mileage, scores, currency, or counts.
 
+## Demo
+
+<img src="ODOMETER.gif" height="400" />
+
 ## Features
 
 - **Smooth Animations**: Digits roll smoothly to their new values with a customizable visual style.
