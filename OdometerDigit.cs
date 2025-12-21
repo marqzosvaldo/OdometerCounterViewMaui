@@ -14,12 +14,11 @@ public class OdometerDigit : ContentView {
     public OdometerDigit(double fontSize, Color textColor, double height, string fontFamily, double offset, bool debugMode) {
         IsClippedToBounds = true;
         HeightRequest = height;
-        WidthRequest = fontSize * 0.9; // Un poco de margen horizontal
+        WidthRequest = fontSize * 0.9;
 
         _digitHeight = height;
         _verticalOffset = offset;
 
-        // Usamos un Grid rígido para asegurar que la altura sea matemáticamente perfecta
         _stripGrid = new Grid {
             RowSpacing = 0,
             Padding = 0,
@@ -28,9 +27,7 @@ public class OdometerDigit : ContentView {
             VerticalOptions = LayoutOptions.Start
         };
 
-        // Creamos la tira vertical: 0, 1, 2... 9, 0 (El 0 extra es para el ciclo infinito)
         for (int i = 0; i <= 10; i++) {
-            // Definimos la fila con altura ABSOLUTA
             _stripGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(height, GridUnitType.Absolute) });
 
             int val = i % 10;
@@ -50,30 +47,22 @@ public class OdometerDigit : ContentView {
                 Padding = 0
             };
 
-            // --- LÓGICA DE DEBUG ---
             if (debugMode) {
-                // 1. Fondo de color para ver el área real que ocupa el número
                 label.BackgroundColor = i % 2 == 0
-                    ? Color.FromRgba("#44FF0000") // Rojo suave
-                    : Color.FromRgba("#440000FF"); // Azul suave
+                    ? Color.FromRgba("#44FF0000")
+                    : Color.FromRgba("#440000FF");
 
-                // 2. LÍNEA DE CENTRO (NUEVO): 
-                // Dibuja una línea amarilla en el centro exacto de la celda.
-                // Si la línea no pasa por la mitad del número, ajusta el VerticalOffset.
                 var centerLine = new BoxView {
                     Color = Colors.Yellow,
                     HeightRequest = 2,
                     WidthRequest = fontSize * 0.9,
-                    VerticalOptions = LayoutOptions.Center, // Centro matemático del Grid
-                    InputTransparent = true // Para que no bloquee nada
+                    VerticalOptions = LayoutOptions.Center,
+                    InputTransparent = true
                 };
 
-                // Añadimos primero el Label
                 _stripGrid.Add(label, 0, i);
-                // Añadimos la línea encima
                 _stripGrid.Add(centerLine, 0, i);
             } else {
-                // Si no es debug, solo añadimos el Label
                 _stripGrid.Add(label, 0, i);
             }
         }
@@ -82,13 +71,46 @@ public class OdometerDigit : ContentView {
     }
 
     public void SetPosition(double value) {
-        // Módulo matemático para asegurar rango 0-9.99
         double effectiveVal = (value % 10 + 10) % 10;
-
-        // FÓRMULA DE POSICIÓN:
-        // Desplazamiento base + Tu Ajuste Manual (Offset)
         double yOffset = -(effectiveVal * _digitHeight) + _verticalOffset;
-
         _stripGrid.TranslationY = yOffset;
+    }
+
+    public void UpdateVisuals(double fontSize, Color textColor, double height, string fontFamily, double offset, bool debugMode) {
+        _digitHeight = height;
+        _verticalOffset = offset;
+
+        this.HeightRequest = height;
+        this.WidthRequest = fontSize * 0.9;
+        
+        if (_stripGrid != null) {
+            _stripGrid.WidthRequest = fontSize * 0.9;
+
+            foreach (var rowDef in _stripGrid.RowDefinitions) {
+                rowDef.Height = new GridLength(height, GridUnitType.Absolute);
+            }
+
+            for (int i = 0; i < _stripGrid.Children.Count; i++) {
+                var child = _stripGrid.Children[i];
+                if (child is Label label) {
+                    label.FontSize = fontSize;
+                    label.TextColor = textColor;
+                    label.FontFamily = fontFamily;
+                    label.HeightRequest = height;
+                    
+                    if (debugMode) {
+                        int val = int.Parse(label.Text);
+                        label.BackgroundColor = val % 2 == 0
+                            ? Color.FromRgba("#44FF0000")
+                            : Color.FromRgba("#440000FF");
+                    } else {
+                        label.BackgroundColor = Colors.Transparent;
+                    }
+                }
+                else if (child is BoxView box && debugMode) {
+                     box.WidthRequest = fontSize * 0.9;
+                }
+            }
+        }
     }
 }

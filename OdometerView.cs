@@ -70,9 +70,6 @@ public class OdometerView : HorizontalStackLayout {
         private set => base.MaximumWidthRequest = value;
     }
 
-    // Configuración
-    
-    // FontSize
     public static readonly BindableProperty FontSizeProperty =
         BindableProperty.Create(nameof(FontSize), typeof(double), typeof(OdometerView), 50.0, propertyChanged: OnVisualPropertyChanged);
 
@@ -81,7 +78,6 @@ public class OdometerView : HorizontalStackLayout {
         set => SetValue(FontSizeProperty, value);
     }
 
-    // DurationMs
     public static readonly BindableProperty DurationMsProperty =
         BindableProperty.Create(nameof(DurationMs), typeof(uint), typeof(OdometerView), (uint)2000);
 
@@ -90,7 +86,6 @@ public class OdometerView : HorizontalStackLayout {
         set => SetValue(DurationMsProperty, value);
     }
 
-    // FontFamily
     public static readonly BindableProperty FontFamilyProperty =
         BindableProperty.Create(nameof(FontFamily), typeof(string), typeof(OdometerView), "", propertyChanged: OnVisualPropertyChanged);
 
@@ -99,7 +94,6 @@ public class OdometerView : HorizontalStackLayout {
         set => SetValue(FontFamilyProperty, value);
     }
 
-    // VerticalOffset
     public static readonly BindableProperty VerticalOffsetProperty =
         BindableProperty.Create(nameof(VerticalOffset), typeof(double), typeof(OdometerView), 0.0, propertyChanged: OnVisualPropertyChanged);
 
@@ -108,7 +102,6 @@ public class OdometerView : HorizontalStackLayout {
         set => SetValue(VerticalOffsetProperty, value);
     }
 
-    // DebugMode
     public static readonly BindableProperty DebugModeProperty =
         BindableProperty.Create(nameof(DebugMode), typeof(bool), typeof(OdometerView), false, propertyChanged: OnVisualPropertyChanged);
 
@@ -119,11 +112,20 @@ public class OdometerView : HorizontalStackLayout {
 
     private static void OnVisualPropertyChanged(BindableObject bindable, object oldValue, object newValue) {
         var control = (OdometerView)bindable;
-        // Al cambiar propiedades visuales, recreamos los dígitos para aplicar los cambios en caliente.
-        control.Children.Clear();
-        string valStr = control.TargetValue.ToString();
-        control.UpdateColumns(valStr.Length);
-        control.UpdateDigitPositions(control.TargetValue, isFinished: true);
+        control.UpdateDigitVisuals();
+    }
+
+    private void UpdateDigitVisuals() {
+        double effectiveHeight = FontSize * 1.6;
+        base.HeightRequest = effectiveHeight;
+
+        foreach (var child in Children) {
+            if (child is OdometerDigit digit) {
+                digit.UpdateVisuals(FontSize, TextColor, effectiveHeight, FontFamily, VerticalOffset, DebugMode);
+            }
+        }
+        
+        UpdateDigitPositions(TargetValue, isFinished: true);
     }
 
     public OdometerView() {
@@ -145,14 +147,11 @@ public class OdometerView : HorizontalStackLayout {
 
         var animation = new Animation(v =>
         {
-            // Durante la animación, usamos isFinished = false para el movimiento suave
             UpdateDigitPositions(v, isFinished: false);
         }, start, end);
 
         animation.Commit(this, "OdometerRun", 16, DurationMs, Easing.CubicOut, (v, c) =>
         {
-            // AL FINALIZAR: Llamamos con isFinished = true.
-            // Esto fuerza a los números a alinearse perfectamente ignorando decimales.
             UpdateDigitPositions(end, isFinished: true);
         });
     }
@@ -190,46 +189,31 @@ public class OdometerView : HorizontalStackLayout {
                 double opacity = 1.0;
 
                 if (isFinished) {
-                    // AL FINAL: Alineación perfecta (Snap Duro)
                     finalPosition = Math.Floor(valForColumn);
                     if (power == 0) finalPosition = valForColumn;
                 } else {
                     double floorVal = Math.Floor(valForColumn);
                     double remainder = valForColumn - floorVal;
 
-                    // UMBRAL:
-                    // 0.30 significa que el número espera quieto el 30% del tiempo.
-                    // En el último 70% gira suavemente.
                     double threshold = 0.30;
 
                     finalPosition = floorVal;
 
                     if (remainder > threshold) {
-                        // 1. Calculamos el progreso lineal del giro (de 0.0 a 1.0)
                         double linearProgress = (remainder - threshold) / (1.0 - threshold);
 
-                        // 2. APLICAMOS EL GIRO CON REBOTE SUAVE (Custom BackOut)
-                        // Formula: 1 + (t - 1)^3 * (1 + s) + (t - 1)^2 * s
-                        // Donde s es la "fuerza" del rebote. 1.70158 es el standard.
-                        // Usaremos 0.6 para que sea "pequeño".
                         double s = 0.6;
                         double t = linearProgress - 1;
                         double bounceProgress = (t * t * ((s + 1) * t + s) + 1);
 
                         finalPosition += bounceProgress;
 
-                        // 3. FADE EFFECT (Para columnas > 0)
-                        // Bajamos opacidad durante el giro.
-                        // Sin(linearProgress * PI) va de 0 a 1 y vuelve a 0.
-                        double fadeStrength = 0.6; // Opacidad mínima = 0.4
+                        double fadeStrength = 0.6;
                         opacity = 1.0 - (fadeStrength * Math.Sin(linearProgress * Math.PI));
                     }
 
-                    // La unidad siempre gira libre y lineal
                     if (power == 0) {
                         finalPosition = rawValue;
-                        // FADE EFFECT (Para unidad)
-                        // Usamos el remainder directo (0..1) para el ciclo continuo
                         double fadeStrength = 0.6;
                         opacity = 1.0 - (fadeStrength * Math.Sin(remainder * Math.PI));
                     }
