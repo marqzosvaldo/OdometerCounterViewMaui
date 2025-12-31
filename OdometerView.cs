@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Devices;
 
 namespace OdometerCounterViewMaui;
 
@@ -110,6 +111,14 @@ public class OdometerView : HorizontalStackLayout {
         set => SetValue(DebugModeProperty, value);
     }
 
+    public static readonly BindableProperty IsHapticFeedbackEnabledProperty =
+        BindableProperty.Create(nameof(IsHapticFeedbackEnabled), typeof(bool), typeof(OdometerView), false);
+
+    public bool IsHapticFeedbackEnabled {
+        get => (bool)GetValue(IsHapticFeedbackEnabledProperty);
+        set => SetValue(IsHapticFeedbackEnabledProperty, value);
+    }
+
     private static void OnVisualPropertyChanged(BindableObject bindable, object oldValue, object newValue) {
         var control = (OdometerView)bindable;
         control.UpdateDigitVisuals();
@@ -145,8 +154,26 @@ public class OdometerView : HorizontalStackLayout {
         string endStr = end.ToString();
         UpdateColumns(endStr.Length);
 
+        int lastVal = start;
+
+        long lastVibrationTicks = 0;
+
         var animation = new Animation(v =>
         {
+            if (IsHapticFeedbackEnabled) {
+                int currentInt = (int)v;
+                if (currentInt != lastVal) {
+                    long currentTicks = DateTime.Now.Ticks;
+                    if (currentTicks - lastVibrationTicks > 200_000) {
+                        try {
+                            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(8));
+                            lastVibrationTicks = currentTicks;
+                        } catch {
+                        }
+                    }
+                    lastVal = currentInt;
+                }
+            }
             UpdateDigitPositions(v, isFinished: false);
         }, start, end);
 
