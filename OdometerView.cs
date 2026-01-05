@@ -142,6 +142,12 @@ public class OdometerView : HorizontalStackLayout {
         HorizontalOptions = LayoutOptions.Center;
         VerticalOptions = LayoutOptions.Center;
         IsClippedToBounds = true;
+
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnUnloaded(object? sender, EventArgs e) {
+        this.AbortAnimation("OdometerRun");
     }
 
     private static void OnTargetValueChanged(BindableObject bindable, object oldValue, object newValue) {
