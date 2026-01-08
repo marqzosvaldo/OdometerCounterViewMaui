@@ -14,11 +14,10 @@ An animated odometer-style counter control for .NET MAUI applications. This cont
 - **Customizable Appearance**: Full support for standard font customization including:
     - `FontSize`
     - `FontFamily`
-    - `FontAttributes`
     - `TextColor`
     - `DurationMs`
 - **Haptic Feedback**: Optional vibration feedback when numbers change (enable with `IsHapticFeedbackEnabled="True"`). (Available in 1.0.5-beta)
-- **Flexible Data Binding**: Simply bind the `Value` property to any integer to trigger the animation.
+- **Flexible Data Binding**: Simply bind the `TargetValue` property to any integer to trigger the animation.
 - **Dynamic Sizing**: The control automatically sizes itself based on the number of digits and font settings.
 - **Performance Optimized**: efficiently handles updates to minimize UI thread impact.
 
@@ -32,7 +31,7 @@ Simply add the namespace and use the `OdometerView` control in your XAML.
 <xmlns:controls="clr-namespace:OdometerCounterViewMaui;assembly=OdometerCounterViewMaui">
 
 <controls:OdometerView 
-    Value="12345"
+    TargetValue="12345"
     FontSize="50"
     DurationMs="500"
     IsHapticFeedbackEnabled="True"
@@ -43,9 +42,8 @@ Simply add the namespace and use the `OdometerView` control in your XAML.
 
 ```xml
 <controls:OdometerView 
-    Value="{Binding CurrentCount}"
+    TargetValue="{Binding CurrentCount}"
     FontSize="32"
-    FontAttributes="Bold"
     DurationMs="1500"
     TextColor="Black" />
 ```
