@@ -6,10 +6,11 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>OdometerCounterViewMaui</PackageId>
-		<Version>1.0.5-beta</Version>
+		<Version>1.0.6-beta</Version>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageReleaseNotes>Added IsHapticFeedbackEnabled property to trigger device vibration during counting. Note: This feature has currently only been tested on Android.</PackageReleaseNotes>
+		<PackageReleaseNotes>Corrected documentation: renamed Value property to TargetValue and removed unsupported FontAttributes.</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/marqzosvaldo/OdometerCounterViewMaui</PackageProjectUrl>
+		<!-- <IsTrimmable>true</IsTrimmable> -->
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.0" />
