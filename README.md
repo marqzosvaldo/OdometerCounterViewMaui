@@ -16,8 +16,10 @@ An animated odometer-style counter control for .NET MAUI applications. This cont
     - `FontFamily`
     - `TextColor`
     - `DurationMs`
+- **Thousand Separators**: Optional display of commas as thousand separators (enable with `IsThousandSeparatorEnabled="True"`).
+- **Compact Notation**: Formats large numbers with suffixes like K, M, B, T (e.g. 1.5M). Enable with `UseCompactNotation="True"`. Note: This property is mutually exclusive with `IsThousandSeparatorEnabled`.
 - **Haptic Feedback**: Optional vibration feedback when numbers change (enable with `IsHapticFeedbackEnabled="True"`). (Available in 1.0.5-beta)
-- **Flexible Data Binding**: Simply bind the `TargetValue` property to any integer to trigger the animation.
+- **Flexible Data Binding**: Simply bind the `TargetValue` property to any `long` or `int` integer to trigger the animation. Supports very large numbers (64-bit).
 - **Dynamic Sizing**: The control automatically sizes itself based on the number of digits and font settings.
 - **Performance Optimized**: efficiently handles updates to minimize UI thread impact.
 
@@ -44,6 +46,7 @@ Simply add the namespace and use the `OdometerView` control in your XAML.
 <controls:OdometerView 
     TargetValue="{Binding CurrentCount}"
     FontSize="32"
+    IsThousandSeparatorEnabled="True"
     DurationMs="1500"
     TextColor="Black" />
 ```

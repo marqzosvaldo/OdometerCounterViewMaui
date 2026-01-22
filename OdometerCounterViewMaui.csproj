@@ -6,9 +6,9 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>OdometerCounterViewMaui</PackageId>
-		<Version>1.0.6-beta</Version>
+		<Version>1.0.7-beta</Version>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageReleaseNotes>Corrected documentation: renamed Value property to TargetValue and removed unsupported FontAttributes.</PackageReleaseNotes>
+		<PackageReleaseNotes>Added Compact Notation (1K, 1M), Thousand Separators, Long integer support, and fixed alignment issues. Verified on Android.</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/marqzosvaldo/OdometerCounterViewMaui</PackageProjectUrl>
 		<!-- <IsTrimmable>true</IsTrimmable> -->
 	</PropertyGroup>
